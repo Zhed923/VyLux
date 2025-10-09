@@ -90,8 +90,6 @@ function lib:Window(text, preset, closebind)
     PresetColor = preset or Color3.fromRGB(44, 120, 224)
     fs = false
     local Main = Instance.new("Frame")
-    local TabHold = Instance.new("Frame")
-    local TabHoldLayout = Instance.new("UIListLayout")
     local Title = Instance.new("TextLabel")
     local TabFolder = Instance.new("Folder")
     local DragFrame = Instance.new("Frame")
@@ -106,66 +104,139 @@ function lib:Window(text, preset, closebind)
     Main.ClipsDescendants = true
     Main.Visible = true
 
-    -- Show/Hide Button (Square, draggable, left of window, with optional image)
-local ShowHideBtn = Instance.new("TextButton")
-ShowHideBtn.Name = "ShowHideBtn"
-ShowHideBtn.Parent = ui
-ShowHideBtn.Size = UDim2.new(0, 36, 0, 36)
-ShowHideBtn.Position = UDim2.new(0, Main.Position.X.Offset - 46, 0, Main.Position.Y.Offset) -- 46px to the left of window
-ShowHideBtn.AnchorPoint = Vector2.new(0, 0)
-ShowHideBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-ShowHideBtn.BorderSizePixel = 0
-ShowHideBtn.Text = ""
-ShowHideBtn.AutoButtonColor = true
+    -- === NEW SHOW/HIDE BUTTON ===
+    local ShowHideBtn = Instance.new("ImageButton")
+    ShowHideBtn.Name = "ShowHideBtn"
+    ShowHideBtn.Parent = ui
+    ShowHideBtn.Size = UDim2.new(0, 48, 0, 48) -- bigger and square
+    ShowHideBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+    ShowHideBtn.BackgroundTransparency = 1 -- fully invisible background, all image
+    ShowHideBtn.Image = "rbxassetid://14515571152" -- Example: replace with your preferred square icon
+    ShowHideBtn.AutoButtonColor = true
 
--- OPTIONAL: Set an image as the button's icon
-local btnImg = Instance.new("ImageLabel")
-btnImg.Parent = ShowHideBtn
-btnImg.Size = UDim2.new(1, 0, 1, 0)
-btnImg.Position = UDim2.new(0, 0, 0, 0)
-btnImg.BackgroundTransparency = 1
-btnImg.Image = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&assetId=99542054709008" -- example, use your preferred asset id
-
--- Make the button draggable (but NOT the window!)
-local draggingBtn = false
-local dragInputBtn, dragStartBtn, startPosBtn
-local dragMovedBtn = false
-
-ShowHideBtn.MouseButton1Down:Connect(function(input)
-    draggingBtn = true
-    dragMovedBtn = false
-    dragStartBtn = input.Position
-    startPosBtn = ShowHideBtn.Position
-
-    local connMove, connUp
-    connMove = UserInputService.InputChanged:Connect(function(mInput)
-        if draggingBtn and mInput.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = mInput.Position - dragStartBtn
+    -- Helper to update position: always to the left of Main, centered vertically
+    local function updateShowHideBtnPosition()
+        if Main.Parent then
+            local mainAbsPos = Main.AbsolutePosition
+            local mainAbsSize = Main.AbsoluteSize
             ShowHideBtn.Position = UDim2.new(
-                startPosBtn.X.Scale,
-                startPosBtn.X.Offset + delta.X,
-                startPosBtn.Y.Scale,
-                startPosBtn.Y.Offset + delta.Y
+                0, mainAbsPos.X - ShowHideBtn.Size.X.Offset / 2 - 12, -- 12px gap from left edge
+                0, mainAbsPos.Y + mainAbsSize.Y/2
             )
-            dragMovedBtn = true
         end
-    end)
-
-    connUp = input.Changed:Connect(function()
-        if input.UserInputState == Enum.UserInputState.End then
-            draggingBtn = false
-            connMove:Disconnect()
-            connUp:Disconnect()
-        end
-    end)
-end)
-
-ShowHideBtn.MouseButton1Click:Connect(function()
-    if not dragMovedBtn then
-        Main.Visible = not Main.Visible
     end
-    dragMovedBtn = false
-end)
+
+    -- Update initially and on move/resize
+    RunService.RenderStepped:Connect(updateShowHideBtnPosition)
+    Main:GetPropertyChangedSignal("Position"):Connect(updateShowHideBtnPosition)
+    Main:GetPropertyChangedSignal("Size"):Connect(updateShowHideBtnPosition)
+
+    -- Make the button draggable (but NOT the window!)
+    local draggingBtn = false
+    local dragInputBtn, dragStartBtn, startPosBtn
+    local dragMovedBtn = false
+
+    ShowHideBtn.MouseButton1Down:Connect(function(input)
+        draggingBtn = true
+        dragMovedBtn = false
+        dragStartBtn = input.Position
+        startPosBtn = ShowHideBtn.Position
+
+        local connMove, connUp
+        connMove = UserInputService.InputChanged:Connect(function(mInput)
+            if draggingBtn and mInput.UserInputType == Enum.UserInputType.MouseMovement then
+                local delta = mInput.Position - dragStartBtn
+                ShowHideBtn.Position = UDim2.new(
+                    startPosBtn.X.Scale,
+                    startPosBtn.X.Offset + delta.X,
+                    startPosBtn.Y.Scale,
+                    startPosBtn.Y.Offset + delta.Y
+                )
+                dragMovedBtn = true
+            end
+        end)
+
+        connUp = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingBtn = false
+                connMove:Disconnect()
+                connUp:Disconnect()
+            end
+        end)
+    end)
+
+    ShowHideBtn.MouseButton1Click:Connect(function()
+        if not dragMovedBtn then
+            Main.Visible = not Main.Visible
+        end
+        dragMovedBtn = false
+    end)
+    -- === END NEW SHOW/HIDE BUTTON ===
+
+    Title.Name = "Title"
+    Title.Parent = Main
+    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Title.BackgroundTransparency = 1.000
+    Title.Position = UDim2.new(0.0339285731, 0, 0.0564263314, 0)
+    Title.Size = UDim2.new(0, 200, 0, 23)
+    Title.Font = Enum.Font.GothamSemibold
+    Title.Text = text
+    Title.TextColor3 = Color3.fromRGB(68, 68, 68)
+    Title.TextSize = 12.000
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    DragFrame.Name = "DragFrame"
+    DragFrame.Parent = Main
+    DragFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    DragFrame.BackgroundTransparency = 1.000
+    DragFrame.Size = UDim2.new(0, 560, 0, 41)
+
+    Main:TweenSize(UDim2.new(0, 560, 0, 319), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, .6, true)
+
+    MakeDraggable(DragFrame, Main)
+
+    local uitoggled = false
+    UserInputService.InputBegan:Connect(
+        function(io, p)
+            if io.KeyCode == CloseBind then
+                if uitoggled == false then
+                    uitoggled = true
+                
+                    Main:TweenSize(
+                        UDim2.new(0, 0, 0, 0), 
+                        Enum.EasingDirection.Out, 
+                        Enum.EasingStyle.Quart, 
+                        .6, 
+                        true, 
+                        function()
+                            ui.Enabled = false
+                        end
+                    )
+                    
+                else
+                    uitoggled = false
+                    ui.Enabled = true
+                
+                    Main:TweenSize(
+                        UDim2.new(0, 560, 0, 319),
+                        Enum.EasingDirection.Out,
+                        Enum.EasingStyle.Quart,
+                        .6,
+                        true
+                    )
+                end
+            end
+        end
+    )
+
+    TabFolder.Name = "TabFolder"
+    TabFolder.Parent = Main
+
+    function lib:ChangePresetColor(toch)
+        PresetColor = toch
+    end
+
+    -- your code continues here...
 
     TabHold.Name = "TabHold"
     TabHold.Parent = Main
