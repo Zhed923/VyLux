@@ -124,7 +124,7 @@ btnImg.Parent = ShowHideBtn
 btnImg.Size = UDim2.new(1, 0, 1, 0)
 btnImg.Position = UDim2.new(0, 0, 0, 0)
 btnImg.BackgroundTransparency = 1
-btnImg.Image = "rbxassetid://6031094678" -- example, use your preferred asset id
+btnImg.Image = "https://www.roblox.com/Thumbs/Asset.ashx?width=420&height=420&assetId=99542054709008" -- example, use your preferred asset id
 
 -- Make the button draggable (but NOT the window!)
 local draggingBtn = false
